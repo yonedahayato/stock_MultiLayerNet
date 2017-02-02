@@ -2,37 +2,23 @@
 
 import pandas as pd
 import numpy as np
+import datetime
+
 from util import shuffle_dataset
 from multi_layer_net import MultiLayerNet
 from multi_layer_net_extend import MultiLayerNetExtend
 from trainer import Trainer
-import datetime
 
 def main():
     
     x = pd.read_csv("get_make_data/x_t_data/x.csv")
     t = pd.read_csv("get_make_data/x_t_data/t.csv")
-    """
-    x_np = np.array(x)
-    t_np = np.array(t)
-
-    batch_mask = np.random.choice(x_np.shape[0], 500) # 500のデータ
-    x_np_mini = x_np[batch_mask]
-    t_np_mini = t_np[batch_mask]
-
-    np.savetxt("get_make_data/x_t_data/x_mini_np.csv", x_np_mini, delimiter=",")
-    np.savetxt("get_make_data/x_t_data/t_mini_np.csv", t_np_mini, delimiter=",")
-    """
-    #x = np.loadtxt("get_make_data/x_t_data/x_mini_np.csv", delimiter=",")
-    #t = np.loadtxt("get_make_data/x_t_data/t_mini_np.csv", delimiter=",")
 
     x = np.array(x)
     t = np.array(t)
     t = t.astype(np.uint8)
 
     x, t = shuffle_dataset(x, t)
-    x = x[:int(x.shape[0]/2)]
-    t = t[:int(t.shape[0]/2)]
 
     validation_rate = 0.20 # ハイパーパラメータ検証データは20%
     train_rate = 0.60 # 学習データは60%
@@ -60,8 +46,7 @@ def main():
                                       dropout_ration=0.5,
                                       use_batchnorm=True)
 
-        #batch_size = int(x_train.shape[0]/100)
-        batch_size = 100
+        batch_size = int(x_train.shape[0]/100)
         print("batch_size: "+str(batch_size))
 
         trainer = Trainer(network, x_train, t_train, x_val, t_val,
