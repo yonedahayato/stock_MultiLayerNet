@@ -163,34 +163,17 @@ def main():
     data_path = "stock_value_data/"
     file_name = "2014-01-01_2015-01-01.csv"
 
-    
     all_stock_data = data_load(variable, data_path + file_name)
 
     all_stock_data = Make_NextDayData_TeachData(all_stock_data, "Close")
-    
-    all_stock_data.to_csv(data_path+file_name+"_temp1.csv") #write
-    all_stock_data = pd.read_csv(data_path+file_name+"_temp1.csv", encoding="shift-jis", index_col=0) #read
 
     all_stock_data = get_SMA(all_stock_data, "Close")
-    
-    all_stock_data.to_csv(data_path+file_name+"_temp2.csv") #write
-    all_stock_data = pd.read_csv(data_path+file_name+"_temp2.csv", encoding="shift-jis", index_col=0) #read
 
     train_diff = get_train_diff(all_stock_data, "Close")
 
-    train_diff.to_csv(data_path+file_name+"_train_diff.csv") # write
-    train_diff = pd.read_csv(data_path+file_name+"_train_diff.csv", encoding="shift-jis", index_col=0) #read
-
     teach_diff = get_teach_diff(all_stock_data)
 
-    teach_diff.to_csv(data_path+file_name+"_teach_diff.csv") # write
-    teach_diff = pd.read_csv(data_path+file_name+"_teach_diff.csv", encoding="shift-jis", index_col=0) #read
-
     month_code_dummy = get_MonthCode_DummyData(all_stock_data)
-
-    month_code_dummy.to_csv(data_path+file_name+"_MonthCode_dummy.csv") # write
-    month_code_dummy = pd.read_csv(data_path+file_name+"_MonthCode_dummy.csv", encoding="shift-jis", index_col=0) #read
-
 
     train = pd.concat([month_code_dummy, train_diff], axis=1)
     teach = teach_diff
