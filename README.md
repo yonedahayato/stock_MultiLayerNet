@@ -6,6 +6,6 @@ numpy
 pandas  
 
 #How to use
-  
+`python get_make_data/get_stock_data.py`
 #example
   
