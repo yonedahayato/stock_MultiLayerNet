@@ -4,10 +4,10 @@ import pandas as pd
 import numpy as np
 import datetime
 
-from util import shuffle_dataset
-from multi_layer_net import MultiLayerNet
-from multi_layer_net_extend import MultiLayerNetExtend
-from trainer import Trainer
+from MultiLayerNet.util import shuffle_dataset
+from MultiLayerNet.multi_layer_net import MultiLayerNet
+from MultiLayerNet.multi_layer_net_extend import MultiLayerNetExtend
+from MultiLayerNet.trainer import Trainer
 
 def main():
     
