@@ -52,7 +52,6 @@ def get_quote_yahoojp(code, start=None, end=None, interval='d'):
 
 if __name__ == "__main__":
     code_nums = pd.read_csv("tosyo1.csv")
-    #code_nums = pd.DataFrame([1432])
     start = "2014-01-01"
     end = "2015-01-01"
 
@@ -66,10 +65,7 @@ if __name__ == "__main__":
         if len(result)==0:
             continue
         else:
-            #result.to_csv(output_path+str(code)+"_"+start+"_"+end+".csv")
             all_result = pd.concat([all_result, result], axis=0)
-        #sys.exit()
     all_result.index = range(len(all_result))
-    print(all_result)
 
     all_result.to_csv(output_path+start+"_"+end+".csv")
