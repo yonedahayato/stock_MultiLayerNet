@@ -17,7 +17,7 @@ def getStockNameDF():
     return pd.DataFrame({'code': df[u"コード"].astype('int64')})
 
 def saveCSV(df):
-    df[['code']].to_csv('tosyo1.csv', index=False, encoding='utf-8')
+    df[['code']].to_csv('get_make_data/tosyo1.csv', index=False, encoding='utf-8')
 
 if __name__ == '__main__':
     df = getStockNameDF()
