@@ -51,7 +51,7 @@ def get_quote_yahoojp(code, start=None, end=None, interval='d'):
     return result
 
 if __name__ == "__main__":
-    code_nums = pd.read_csv("tosyo1.csv")
+    code_nums = pd.read_csv("get_make_data/tosyo1.csv")
     start = "2014-01-01"
     end = "2015-01-01"
 
