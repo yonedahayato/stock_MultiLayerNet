@@ -55,7 +55,7 @@ if __name__ == "__main__":
     start = "2014-01-01"
     end = "2015-01-01"
 
-    output_path = "stock_value_data/"
+    output_path = "get_make_data/stock_value_data/"
     all_result = None
 
     for i in range(len(code_nums)):
