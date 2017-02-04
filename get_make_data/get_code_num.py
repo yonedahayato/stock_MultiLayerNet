@@ -21,6 +21,4 @@ def saveCSV(df):
 
 if __name__ == '__main__':
     df = getStockNameDF()
-    #df.save('stock_name.pdpy')
-    #df = pd.DataFrame.load('stock_name.pdpy')
     saveCSV(df)
