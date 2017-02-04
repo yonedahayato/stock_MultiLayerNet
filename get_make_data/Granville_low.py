@@ -160,7 +160,7 @@ def get_MonthCode_DummyData(all_stock_data):
 
 def main():
     variable = ["Date", "code", "Close"]
-    data_path = "stock_value_data/"
+    data_path = "get_make_data/stock_value_data/"
     file_name = "2014-01-01_2015-01-01.csv"
 
     all_stock_data = data_load(variable, data_path + file_name)
@@ -178,8 +178,8 @@ def main():
     train = pd.concat([month_code_dummy, train_diff], axis=1)
     teach = teach_diff
 
-    train.to_csv("x_t_data/x.csv", index=False)
-    teach.to_csv("x_t_data/t.csv", index=False)
+    train.to_csv("get_make_data/x_t_data/x.csv", index=False)
+    teach.to_csv("get_make_data/x_t_data/t.csv", index=False)
     return
 
 
