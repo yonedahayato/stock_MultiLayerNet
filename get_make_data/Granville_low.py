@@ -70,7 +70,7 @@ def Simple_Moving_Average(data):
 
 def get_SMA(all_stock_data, variable):
 
-    brand_code_list = list(pd.read_csv("tosyo1.csv").ix[:,"code"])
+    brand_code_list = list(pd.read_csv("get_make_data/tosyo1.csv").ix[:,"code"])
     all_stock_data_tmp = None
     for brand_code in brand_code_list:
         stock_data = all_stock_data.query("code == @brand_code")
