@@ -12,7 +12,7 @@ def data_load(variable, file_name):
     return data.ix[:, variable]
 
 def Make_NextDayData_TeachData(all_stock_data, variable):
-    brand_code_list = list(pd.read_csv("tosyo1.csv").ix[:,"code"])
+    brand_code_list = list(pd.read_csv("get_make_data/tosyo1.csv").ix[:,"code"])
 
     all_stock_data_tmp = None
     for brand_code in brand_code_list: # 銘柄ごと
