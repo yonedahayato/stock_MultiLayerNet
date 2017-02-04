@@ -1,7 +1,8 @@
 # coding: utf-8
 import sys, os
 import numpy as np
-from optimizer import *
+
+from MultiLayerNet.optimizer import *
 
 class Trainer:
     """ニューラルネットの訓練を行うクラス

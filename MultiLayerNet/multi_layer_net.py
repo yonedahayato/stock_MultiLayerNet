@@ -2,8 +2,9 @@
 import sys, os
 import numpy as np
 from collections import OrderedDict
-from layers import *
-from gradient import numerical_gradient
+
+from MultiLayerNet.layers import *
+from MultiLayerNet.gradient import numerical_gradient
 
 
 class MultiLayerNet:

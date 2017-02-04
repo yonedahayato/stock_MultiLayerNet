@@ -1,7 +1,8 @@
 # coding: utf-8
 import numpy as np
-from functions import *
-from util import im2col, col2im
+
+from MultiLayerNet.functions import *
+from MultiLayerNet.util import im2col, col2im
 
 
 class Relu:
