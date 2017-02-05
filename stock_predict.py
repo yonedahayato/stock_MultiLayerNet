@@ -27,7 +27,7 @@ def main():
     network.load_params("best_Params.pkl")
 
     # code の情報を取得
-    code = sys.argv[1]
+    code = int(sys.argv[1])
     print(code)
     
 
