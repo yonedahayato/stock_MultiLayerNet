@@ -2,6 +2,7 @@
 import sys, os
 import numpy as np
 from collections import OrderedDict
+import pickle
 
 from MultiLayerNet.layers import *
 from MultiLayerNet.gradient import numerical_gradient
@@ -60,6 +61,7 @@ class MultiLayerNetExtend:
         self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)], self.params['b' + str(idx)])
 
         self.last_layer = SoftmaxWithLoss()
+        self.last_layer_name = self.last_layer.__class__.__name__
 
     def __init_weight(self, weight_init_std):
         """重みの初期値設定
@@ -73,10 +75,12 @@ class MultiLayerNetExtend:
         all_size_list = [self.input_size] + self.hidden_size_list + [self.output_size]
         for idx in range(1, len(all_size_list)):
             scale = weight_init_std
+
             if str(weight_init_std).lower() in ('relu', 'he'):
                 scale = np.sqrt(2.0 / all_size_list[idx - 1])  # ReLUを使う場合に推奨される初期値
             elif str(weight_init_std).lower() in ('sigmoid', 'xavier'):
                 scale = np.sqrt(1.0 / all_size_list[idx - 1])  # sigmoidを使う場合に推奨される初期値
+
             self.params['W' + str(idx)] = scale * np.random.randn(all_size_list[idx-1], all_size_list[idx])
             self.params['b' + str(idx)] = np.zeros(all_size_list[idx])
 
@@ -161,3 +165,34 @@ class MultiLayerNetExtend:
                 grads['beta' + str(idx)] = self.layers['BatchNorm' + str(idx)].dbeta
 
         return grads
+
+    def layer_cheack(self):
+        for key in self.layers.keys():
+            print(key)
+        print(self.last_layer_name)
+
+    def save_params(self, file_name="params.pkl"):
+        params = {}
+        for key, val in self.params.items():
+            params[key] = val
+        with open("MultiLayerNet/"+file_name, "wb") as f:
+            pickle.dump(params, f)
+
+    def load_params(self, file_name="params.pkl"):
+        with open("MultiLayerNet/"+file_name, "rb") as f:
+            params = pickle.load(f)
+
+        for key, val in params.items():
+            self.params[key] = val
+
+        for idx in range(1, self.hidden_layer_num+1):
+            self.layers['Affine' + str(idx)].W = self.params["W"+str(idx)]
+            self.layers['Affine' + str(idx)].b = self.params["b"+str(idx)]
+
+            if self.use_batchnorm:
+                self.layers['BatchNorm' + str(idx)].gamma = self.params["gamma"+str(idx)]
+                self.layers['BatchNorm' + str(idx)].beta = self.params["beta"+str(idx)]
+
+            idx = self.hidden_layer_num + 1
+            self.layers['Affine' + str(idx)].W = self.params['W' + str(idx)]
+            self.layers['Affine' + str(idx)].b = self.params['b' + str(idx)]

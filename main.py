@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import datetime
+import pickle
 
 from MultiLayerNet.util import shuffle_dataset
 from MultiLayerNet.multi_layer_net import MultiLayerNet
@@ -31,7 +32,7 @@ def main():
     x_train, t_train = x[validation_num:validation_num + train_num], t[validation_num:validation_num + train_num]
     x_test, t_test = x[validation_num + train_num:], t[validation_num + train_num:]
 
-    def __train(lr, weight_decay, epocs=50): # epocs=50
+    def __train(lr, weight_decay, epocs=5): # epocs=50
         """
         network = MultiLayerNet(input_size=x.shape[1],
                                 hidden_size_list=[100, 100, 100, 100, 100],
@@ -46,6 +47,9 @@ def main():
                                       dropout_ration=0.5,
                                       use_batchnorm=True)
 
+        # レイアーの確認
+        #network.layer_cheack()
+
         batch_size = int(x_train.shape[0]/100)
         print("batch_size: "+str(batch_size))
 
@@ -58,15 +62,24 @@ def main():
 
         trainer.train()
 
+        # パラメーターの保存
+        #network.save_params("params.pkl")
+        #network.load_params("params.pkl")
+
         Test_data_acc = network.accuracy(x_test, t_test)
 
-        return trainer.test_acc_list, trainer.train_acc_list, Test_data_acc
+        return trainer.test_acc_list, trainer.train_acc_list, Test_data_acc, network
 
-    optimization_trial = 100
+    optimization_trial = 5 # 100
 
     results_val = {}
     results_train = {}
     results_test = {}
+
+    params_dict_lr = {}
+    params_dict_WeightDecay = {}
+
+    network_dict = {}
 
     for _ in range(optimization_trial):
         start = datetime.datetime.now()
@@ -75,7 +88,10 @@ def main():
         weight_decay = 10**np.random.uniform(-8, -2) # (-8, -4)
         lr = 10**np.random.uniform(-8, -1) # (-6, -2)
 
-        val_acc_list, train_acc_list, test_acc = __train(lr, weight_decay)
+        params_dict = {}
+
+        val_acc_list, train_acc_list, test_acc, network = __train(lr, weight_decay) #学習
+
         print("val acc:"+str(val_acc_list[-1])+", test acc:"+str(test_acc)+" | lr:"+str(lr)+", weight decay:"+str(weight_decay))
 
         key = "lr:"+str(lr)+", weight decay:"+str(weight_decay)
@@ -84,16 +100,34 @@ def main():
         results_train[key] = train_acc_list
         results_test[key] = test_acc
 
+        params_dict_lr[key] = lr
+        params_dict_WeightDecay[key] = weight_decay
+
+        network_dict[key] = network
+
         print("elapsed time:{0}".format(datetime.datetime.now() - start))
 
     print("=== Hyper-Parameter Optimization Result ===")
     i = 0
+    best_params_network = {}
     for key, val_acc_list in sorted(results_val.items(), key=lambda x:x[1][-1], reverse=True):
         print("Best-"+str(i+1)+"(val acc:"+str(val_acc_list[-1])+", test acc:"+str(results_test[key])+") | "+key)
+        print(params_dict_lr[key])
+        print(params_dict_WeightDecay[key])
+        if i==0:
+            best_params_network["lr"] = params_dict_lr[key]
+            best_params_network["weight_decay"] = params_dict_WeightDecay[key]
+            best_params_network["network"] = network_dict[key]
+
         i+=1
+        if i==10: break
 
-        if i==20: break
+    # best parameter の save
+    best_params_network["network"].save_params("best_Params.pkl")
 
+    # hyper parameter の save
+    with open("MultiLayerNet/best_HyperParams.pkl", "wb") as f:
+        pickle.dump(best_params_network, f)
     return
 
 main()
