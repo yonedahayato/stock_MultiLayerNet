@@ -182,5 +182,4 @@ def main():
     teach.to_csv("get_make_data/x_t_data/t.csv", index=False)
     return
 
-
-main()
+#main()
