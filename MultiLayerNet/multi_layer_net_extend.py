@@ -175,11 +175,11 @@ class MultiLayerNetExtend:
         params = {}
         for key, val in self.params.items():
             params[key] = val
-        with open("MultiLayerNet/"+file_name, "wb") as f:
+        with open("MultiLayerNet/params/"+file_name, "wb") as f:
             pickle.dump(params, f)
 
     def load_params(self, file_name="params.pkl"):
-        with open("MultiLayerNet/"+file_name, "rb") as f:
+        with open("MultiLayerNet/params/"+file_name, "rb") as f:
             params = pickle.load(f)
 
         for key, val in params.items():

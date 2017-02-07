@@ -126,7 +126,7 @@ def main():
     best_params_network["network"].save_params("best_Params.pkl")
 
     # hyper parameter の save
-    with open("MultiLayerNet/best_HyperParams.pkl", "wb") as f:
+    with open("MultiLayerNet/params/best_HyperParams.pkl", "wb") as f:
         pickle.dump(best_params_network, f)
 
     return
