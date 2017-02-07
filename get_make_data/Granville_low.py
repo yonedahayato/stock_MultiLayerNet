@@ -11,7 +11,7 @@ def data_load(variable, file_name):
 
     return data.ix[:, variable]
 
-def Make_NextDayData_TeachData(all_stock_data, variable):
+def Make_NextDayData_TeachData(all_stock_data, variable, NoTeach=False):
     brand_code_list = list(pd.read_csv("get_make_data/tosyo1.csv").ix[:,"code"])
 
     all_stock_data_tmp = None
@@ -31,14 +31,15 @@ def Make_NextDayData_TeachData(all_stock_data, variable):
 
             stock_data = pd.concat([stock_data, new_variable_dic["next-"+str(n)+variable]], axis=1)
 
-        T = 2 # t日先の教師データ
-        teach_data_dic = {}
-        for t in range(1,T+1):
-            teach_data_dic["teach-"+str(t)] = stock_data.ix[N+t:, ["Close"]] #教師データはcloseを使用
-            teach_data_dic["teach-"+str(t)].index = range(len(teach_data_dic["teach-"+str(t)]))
-            teach_data_dic["teach-"+str(t)].columns = ["teach-"+str(t)]
+        if NoTeach == False:
+            T = 2 # t日先の教師データ
+            teach_data_dic = {}
+            for t in range(1,T+1):
+                teach_data_dic["teach-"+str(t)] = stock_data.ix[N+t:, ["Close"]] #教師データはcloseを使用
+                teach_data_dic["teach-"+str(t)].index = range(len(teach_data_dic["teach-"+str(t)]))
+                teach_data_dic["teach-"+str(t)].columns = ["teach-"+str(t)]
 
-            stock_data = pd.concat([stock_data, teach_data_dic["teach-"+str(t)]], axis=1)
+                stock_data = pd.concat([stock_data, teach_data_dic["teach-"+str(t)]], axis=1)
 
         stock_data = stock_data.dropna() # NaN削除
         all_stock_data_tmp = pd.concat([all_stock_data_tmp, stock_data], axis=0)
@@ -51,7 +52,6 @@ def Make_NextDayData_TeachData(all_stock_data, variable):
     del all_stock_data_tmp
 
     return all_stock_data
-
 
 def Simple_Moving_Average(data):
     data.index = range(len(data))
@@ -133,6 +133,69 @@ def get_MonthCode_DummyData(all_stock_data):
     code_list = []
     for i in range(len(all_stock_data)):
         month_list.append(int(dt.strptime( month_data.ix[i,"Date"], '%Y-%m-%d').month))
+
+        """
+        Code = int(code_data.ix[i, "code"])
+        if 1300<=Code and Code<1500: code_list.append("1") # 農林水産
+
+        elif 1500<=Code and Code<1700: code_list.append("2") # 鉱業
+
+        elif 1700<=Code and Code<2000: code_list.append("3") # 建築
+
+        elif 2000<=Code and Code<3000: code_list.append("4") # 食品
+
+        elif 3000<=Code and Code<3600: code_list.append("5") # 繊維製品
+
+        elif 3700<=Code and Code<4000: code_list.append("6") # パルプ・紙
+
+        elif 4000<=Code and Code<5000: code_list.append("7") # 化学・医薬品
+
+        elif 5000<=Code and Code<5100: code_list.append("8") # 石炭・石油
+
+        elif 5100<=Code and Code<5200: code_list.append("9") # ゴム
+
+        elif 5200<=Code and Code<5400: code_list.append("10") # 窯業
+
+        elif 5400<=Code and Code<5700: code_list.append("11") # 鉄鋼
+
+        elif 5700<=Code and Code<=5800: code_list.append("12") # 非金属
+
+        elif 5900<=Code and Code<6000: code_list.append("13") # 金属製品
+
+        elif 6000<=Code and Code<6500: code_list.append("14") # 機会
+
+        elif 6500<=Code and Code<7000: code_list.append("15") # 電機
+
+        elif 7000<=Code and Code<7500: code_list.append("16") # 輸送用機械
+
+        elif 7700<=Code and Code<7800: code_list.append("17") # 精密機械
+
+        elif 7800<=Code and Code<8000: code_list.append("18") # その他製品
+
+        elif 8000<=Code and Code<8300: code_list.append("19") # 商業
+
+        elif 8300<=Code and Code<8600: code_list.append("20") # 銀行・ノンバンク
+
+        elif 8600<=Code and Code<8700: code_list.append("21") # 証券・証券先物
+
+        elif 8700<=Code and Code<8800: code_list.append("22") # 保険
+
+        elif 8800<=Code and Code<9000: code_list.append("23") # 不動産
+
+        elif 9000<=Code and Code<9100: code_list.append("24") # 陸運
+
+        elif 9100<=Code and Code<9200: code_list.append("25") # 海運
+
+        elif 9200<=Code and Code<9300: code_list.append("26") # 空軍
+
+        elif 9300<=Code and Code<9400: code_list.append("27") # 倉庫・運輸
+
+        elif 9400<=Code and Code<9500: code_list.append("28") # 情報通信
+
+        elif 9500<=Code and Code<9600: code_list.append("29") # 電機ガス
+
+        elif 9600<=Code and Code<=9999: code_list.append("30") # サービス
+        """
         code_list.append( str(code_data.ix[i, "code"])[0] )
 
     month_list_dummy = pd.DataFrame(month_list, columns=["month"])
@@ -182,4 +245,6 @@ def main():
     teach.to_csv("get_make_data/x_t_data/t.csv", index=False)
     return
 
-#main()
+if __name__ == '__main__':
+    print("main")
+    main()
