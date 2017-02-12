@@ -20,6 +20,9 @@ def main():
     t = t.astype(np.uint8)
 
     x, t = shuffle_dataset(x, t)
+    m = 4
+    x_len, t_len = int(len(x)/m), int(len(t)/m)
+    x, t = x[:x_len], t[:t_len]
 
     validation_rate = 0.20 # ハイパーパラメータ検証データは20%
     train_rate = 0.60 # 学習データは60%
@@ -32,7 +35,7 @@ def main():
     x_train, t_train = x[validation_num:validation_num + train_num], t[validation_num:validation_num + train_num]
     x_test, t_test = x[validation_num + train_num:], t[validation_num + train_num:]
 
-    def __train(lr, weight_decay, epocs=5): # epocs=50
+    def __train(lr, weight_decay, epocs=50): # epocs=50
         """
         network = MultiLayerNet(input_size=x.shape[1],
                                 hidden_size_list=[100, 100, 100, 100, 100],
@@ -70,7 +73,7 @@ def main():
 
         return trainer.test_acc_list, trainer.train_acc_list, Test_data_acc, network
 
-    optimization_trial = 5 # 100
+    optimization_trial = 50 # 100
 
     results_val = {}
     results_train = {}

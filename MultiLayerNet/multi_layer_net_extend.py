@@ -7,6 +7,7 @@ import pickle
 from MultiLayerNet.layers import *
 from MultiLayerNet.gradient import numerical_gradient
 
+
 class MultiLayerNetExtend:
     """拡張版の全結合による多層ニューラルネットワーク
     

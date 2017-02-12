@@ -8,6 +8,7 @@ import sys
 
 from get_make_data.get_stock_data import get_quote_yahoojp
 from get_make_data.Granville_low import *
+from MultiLayerNet.functions import *
 
 #from MultiLayerNet.util import shuffle_dataset
 #from MultiLayerNet.multi_layer_net import MultiLayerNet
@@ -33,7 +34,13 @@ def get_stock_data(code):
 
         if cnt == 30: break
 
+    all_result = all_result.set_index('Date')
+    all_result = all_result.sort_index()
+
+    date = pd.DataFrame(all_result.index)
     all_result.index = range(len(all_result))
+    all_result = pd.concat([date, all_result], axis=1)
+
     all_result.to_csv("get_predict/stock_data.csv")
 
 
@@ -42,7 +49,7 @@ def main():
     t = pd.read_csv("get_make_data/x_t_data/t.csv")
 
     # hyper parameter の load
-    with open("MultiLayerNet/best_HyperParams.pkl", "rb") as f:
+    with open("MultiLayerNet/params/best_HyperParams.pkl", "rb") as f:
         best_params_network = pickle.load(f)
 
     lr = best_params_network["lr"]
@@ -53,33 +60,47 @@ def main():
     network.load_params("best_Params.pkl")
 
     # code の情報を取得
-    code = int(sys.argv[1])
-
+    code = int(sys.argv[1]) # 6501
     #get_stock_data(code)
 
-    all_stock_data = pd.read_csv("get_predict/stock_data.csv", encoding="shift-jis", index_col=0)
-    print(all_stock_data)
-    return
+    all_stock_data = pd.read_csv("get_predict\stock_data.csv", encoding="shift-jis", index_col=0)
 
+    # データの整形
     all_stock_data = all_stock_data.ix[:, ["Date", "code", "Close"]]
-
-    all_stock_data = Make_NextDayData_TeachData(all_stock_data, "Close")
+    all_stock_data = Make_NextDayData_TeachData(all_stock_data, "Close", NoTeach=True)
     all_stock_data = get_SMA(all_stock_data, "Close")
+    x_diff = get_train_diff(all_stock_data, "Close")
+    x_diff = x_diff.ix[len(x_diff)-1:,:]
+    x_diff.index = [0]
 
-    train_diff = get_train_diff(all_stock_data, "Close")
-    teach_diff = get_teach_diff(all_stock_data)
+    # get_MonthCodeの引数を作成する
+    month_df = pd.DataFrame([str(datetime.date.today() - datetime.timedelta(days=1))], columns=["Date"])
+    code_df = pd.DataFrame([code], columns=["code"])
+    month_code = pd.concat([month_df, code_df], axis=1)
 
-    print(all_stock_data)
-    month_code_dummy = get_MonthCode_DummyData(all_stock_data)
+    month_code_dummy = get_MonthCode_DummyData(month_code)
+    header = ["month_"+str(i+1) for i in range(12)]+["class_"+str(i+1) for i in range(9)]
+    month_code_dummy = pd.concat([pd.DataFrame([], columns=header), month_code_dummy], axis=0)
+    month_code_dummy = month_code_dummy.fillna(0) # Nan を 0に置換
+    month_code_dummy = month_code_dummy.ix[:, header] # headerの順番に並べ替え
 
-    train = pd.concat([month_code_dummy, train_diff], axis=1)
-    teach = teach_diff
-    
-    return
-
+    x = pd.concat([month_code_dummy, x_diff], axis=1)
+    x = np.array(x)
 
     # 次の日の株価（終値）が上がるか下がるかを予測
-    pass
+    predict_x = network.predict(x)
+    y = softmax(predict_x)
+    #print(y)
+    if y[0,0]==0 and y[0,1]==1:
+        print("上昇")
+    elif y[0,0]==1 and y[0,1]==0:
+        print("下降")
+    else:
+        print("error")
 
 
-main()
+    return
+
+if __name__ == '__main__':
+    print("main")
+    main()

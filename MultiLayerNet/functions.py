@@ -28,12 +28,16 @@ def relu_grad(x):
     return grad
     
 
-def softmax(x):
+def softmax(x, verhose=False):
     if x.ndim == 2:
+        if verhose: print(x)
         x = x.T
+        if verhose: print(x)
         x = x - np.max(x, axis=0)
+        if verhose: print(x)
         y = np.exp(x) / np.sum(np.exp(x), axis=0)
-        return y.T 
+        if verhose: print(y)
+        return y.T
 
     x = x - np.max(x) # オーバーフロー対策
     return np.exp(x) / np.sum(np.exp(x))
