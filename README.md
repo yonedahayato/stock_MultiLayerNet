@@ -13,3 +13,5 @@ pandas
 `python main_train.py  学習`  
 
 #example
+`python stock_predict 6501`  
+`上昇`
