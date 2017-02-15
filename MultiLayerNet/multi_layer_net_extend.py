@@ -61,8 +61,11 @@ class MultiLayerNetExtend:
         idx = self.hidden_layer_num + 1
         self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)], self.params['b' + str(idx)])
 
-        self.last_layer = SoftmaxWithLoss()
+        # 出力層の活性化関数(Softmax,Identity) と損失関数
+        #self.last_layer = SoftmaxWithLoss() # 分類（判別）の場合はこっち
+        self.last_layer = IdentityWithLoss(self) # 回帰問題
         self.last_layer_name = self.last_layer.__class__.__name__
+
 
     def __init_weight(self, weight_init_std):
         """重みの初期値設定

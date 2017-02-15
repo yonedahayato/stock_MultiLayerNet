@@ -119,7 +119,11 @@ def get_train_diff(all_stock_data, variable):
 
     return train_diff
 
-def get_teach_diff(all_stock_data):
+def get_teach_diff(all_stock_data, numeric=False):
+    if numeric:
+        teach_diff = ( np.array(all_stock_data.ix[:, "teach-2"]) - np.array(all_stock_data.ix[:, "teach-1"]) ) / np.array(all_stock_data.ix[:, "teach-1"])
+        return pd.DataFrame(teach_diff,columns=["teach"])
+
     teach_diff_mask = (np.array(all_stock_data.ix[:, "teach-2"]) - np.array(all_stock_data.ix[:, "teach-1"]))>0
     teach_diff = teach_diff_mask.astype(np.int64)
 
@@ -234,7 +238,8 @@ def main():
 
     train_diff = get_train_diff(all_stock_data, "Close")
 
-    teach_diff = get_teach_diff(all_stock_data)
+    #teach_diff = get_teach_diff(all_stock_data)
+    teach_diff = get_teach_diff(all_stock_data, numeric=True)
 
     month_code_dummy = get_MonthCode_DummyData(all_stock_data)
 
@@ -246,5 +251,5 @@ def main():
     return
 
 if __name__ == '__main__':
-    print("main")
+    print("Granville_low_main")
     main()

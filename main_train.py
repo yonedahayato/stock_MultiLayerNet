@@ -17,7 +17,7 @@ def main():
 
     x = np.array(x)
     t = np.array(t)
-    t = t.astype(np.uint8)
+    #t = t.astype(np.uint8) #分類（判別）のときは必要
 
     x, t = shuffle_dataset(x, t)
     m = 4
@@ -44,7 +44,7 @@ def main():
         """
         network = MultiLayerNetExtend(input_size=x.shape[1],
                                       hidden_size_list=[100, 100, 100, 100, 100],
-                                      output_size=2,
+                                      output_size=1, # 分類（判別）の場合は2
                                       weight_decay_lambda=weight_decay,
                                       use_dropout=True,
                                       dropout_ration=0.5,
@@ -134,4 +134,6 @@ def main():
 
     return
 
-main()
+if __name__ == '__main__':
+    print("main_train_main")
+    main()
