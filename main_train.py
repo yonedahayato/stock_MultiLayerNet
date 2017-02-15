@@ -20,7 +20,7 @@ def main():
     #t = t.astype(np.uint8) #分類（判別）のときは必要
 
     x, t = shuffle_dataset(x, t)
-    m = 4
+    m = 6
     x_len, t_len = int(len(x)/m), int(len(t)/m)
     x, t = x[:x_len], t[:t_len]
 

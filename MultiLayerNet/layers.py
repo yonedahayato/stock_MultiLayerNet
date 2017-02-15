@@ -67,7 +67,7 @@ class Affine:
         dx = dx.reshape(*self.original_x_shape)  # 入力データの形状に戻す（テンソル対応）
         return dx
 
-class IdentityWithLoss(self):
+class IdentityWithLoss:
     def __init__(self):
         self.loss = None
         self.y = None
