@@ -14,4 +14,4 @@ pandas
 
 #example
 `python stock_predict 6501`  
-`上昇 Close:684`
+`$上昇 Close:684`
