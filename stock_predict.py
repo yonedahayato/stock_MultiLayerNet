@@ -67,6 +67,7 @@ def main():
 
     new_data = all_stock_data.ix[len(all_stock_data)-1:,:] # 最新のデータ
     new_data.index = range(len(new_data))
+    print(new_data)
 
     # データの整形
     all_stock_data = all_stock_data.ix[:, ["Date", "code", "Close"]]
