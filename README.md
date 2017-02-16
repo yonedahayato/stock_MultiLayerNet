@@ -1,7 +1,7 @@
 #stock_MultiLayerNet  
 株価（終値）と単純移動平均との差、月、業種  
 から次の日の株価がどの程度上がるか下がるかを予測する
-
+![image](./画像.png)  
 #requierments 
 numpy  
 pandas  
