@@ -61,9 +61,12 @@ def main():
 
     # code の情報を取得
     code = int(sys.argv[1]) # 6501
-    #get_stock_data(code)
+    get_stock_data(code) # 最近の情報を取得
 
     all_stock_data = pd.read_csv("get_predict\stock_data.csv", encoding="shift-jis", index_col=0)
+
+    new_data = all_stock_data.ix[len(all_stock_data)-1:,:] # 最新のデータ
+    new_data.index = range(len(new_data))
 
     # データの整形
     all_stock_data = all_stock_data.ix[:, ["Date", "code", "Close"]]
@@ -89,18 +92,22 @@ def main():
 
     # 次の日の株価（終値）が上がるか下がるかを予測
     predict_x = network.predict(x)
-    y = softmax(predict_x)
-    #print(y)
-    if y[0,0]==0 and y[0,1]==1:
-        print("上昇")
-    elif y[0,0]==1 and y[0,1]==0:
-        print("下降")
+    # y = softmax(predict_x) # 分類（判別）の場合は使用する
+
+    predict_value = int(new_data.ix[0,"Close"]*(1+predict_x[0,0]))
+    Type="Close"
+
+    # if y[0,0]==0 and y[0,1]==1:
+    if predict_x[0,0]>0:
+        print("上昇 {}:{}".format(Type, predict_value))
+    # elif y[0,0]==1 and y[0,1]==0:
+    elif predict_x[0,0]<0:
+        print("下降 {}:{}".format(Type, predict_value))
     else:
-        print("error")
-
-
+        #print("error")
+        print("変化なし")
     return
 
 if __name__ == '__main__':
-    print("main")
+    print("stock_predict_main")
     main()
