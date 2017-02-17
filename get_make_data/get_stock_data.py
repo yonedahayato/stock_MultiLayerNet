@@ -2,8 +2,11 @@
 
 import numpy as np
 import pandas as pd
-import pandas.io.data as web
+#import pandas.io.data as web
 import sys
+import urllib
+from io import StringIO
+
 
 def get_quote_yahoojp(code, start=None, end=None, interval='d'):
     base = 'http://info.finance.yahoo.co.jp/history/?code={0}.T&{1}&{2}&tm={3}&p={4}'
@@ -50,10 +53,28 @@ def get_quote_yahoojp(code, start=None, end=None, interval='d'):
     result = pd.concat([date, result],axis=1)
     return result
 
+def get_Kdb(code, year):
+    base = "http://k-db.com/stocks/{}-T/1d/{}?download=csv".format(int(code), int(year))
+    #print(base)
+
+    res = urllib.request.urlopen(base)
+    res=res.read().decode('shift-jis')
+    df = pd.read_csv(StringIO(res)) #Index(['日付','始値','高値','安値','終値','出来高','売買代金'], dtype='object')
+    df = df.ix[:,['日付','始値','高値','安値','終値']]
+    df.columns = ['Date', 'Open', 'High', 'Low', 'Close']
+    df = df.sort_index(ascending=False)
+    df.index = range(len(df))
+    df = pd.concat([df, pd.DataFrame({"code":[code]*len(df)})],axis=1)
+
+    return df
+    
+
 if __name__ == "__main__":
     code_nums = pd.read_csv("get_make_data/tosyo1.csv")
     start = "2014-01-01"
     end = "2015-01-01"
+    year = 2014
+    # 2014年のデータが欲しい
 
     output_path = "get_make_data/stock_value_data/"
     all_result = None
@@ -61,7 +82,10 @@ if __name__ == "__main__":
     for i in range(len(code_nums)):
         code = code_nums.ix[i,0]
         print(code)
-        result = get_quote_yahoojp(code, start, end)
+        # result = get_quote_yahoojp(code, start, end) #yahoo_finace ではスクレイピングが禁止されている
+        result = get_Kdb(code, year)
+        print(result.ix[:5,:])
+        sys.exit()
         if len(result)==0:
             continue
         else:
