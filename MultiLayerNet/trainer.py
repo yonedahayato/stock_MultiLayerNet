@@ -41,10 +41,10 @@ class Trainer:
         x_batch = self.x_train[batch_mask]
         t_batch = self.t_train[batch_mask]
 
-        grads = self.network.gradient(x_batch, t_batch)
-        self.optimizer.update(self.network.params, grads)
+        grads = self.network.gradient(x_batch, t_batch) # 勾配
+        self.optimizer.update(self.network.params, grads) # パラメータの更新
         
-        loss = self.network.loss(x_batch, t_batch)
+        loss = self.network.loss(x_batch, t_batch) # 誤差
         self.train_loss_list.append(loss)
         if self.verbose: print("train loss:" + str(loss))
         
@@ -53,13 +53,15 @@ class Trainer:
             
             x_train_sample, t_train_sample = self.x_train, self.t_train
             x_test_sample, t_test_sample = self.x_test, self.t_test
+
             if not self.evaluate_sample_num_per_epoch is None:
                 t = self.evaluate_sample_num_per_epoch
-                x_train_sample, t_train_sample = self.x_train[:t], self.t_train[:t]
-                x_test_sample, t_test_sample = self.x_test[:t], self.t_test[:t]
+                x_train_sample, t_train_sample = self.x_train[:t], self.t_train[:t] # train_data
+                x_test_sample, t_test_sample = self.x_test[:t], self.t_test[:t] # test_data
                 
-            train_acc = self.network.accuracy(x_train_sample, t_train_sample)
-            test_acc = self.network.accuracy(x_test_sample, t_test_sample)
+            train_acc = self.network.accuracy(x_train_sample, t_train_sample, regression=True)
+            test_acc = self.network.accuracy(x_test_sample, t_test_sample, regression=True)
+
             self.train_acc_list.append(train_acc)
             self.test_acc_list.append(test_acc)
 
@@ -70,7 +72,7 @@ class Trainer:
         for i in range(self.max_iter):
             self.train_step()
 
-        test_acc = self.network.accuracy(self.x_test, self.t_test)
+        test_acc = self.network.accuracy(self.x_test, self.t_test, regression=True)
 
         if self.verbose:
             print("=============== Final Test Accuracy ===============")

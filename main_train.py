@@ -20,7 +20,7 @@ def main():
     #t = t.astype(np.uint8) #分類（判別）のときは必要
 
     x, t = shuffle_dataset(x, t)
-    m = 6
+    m = 4
     x_len, t_len = int(len(x)/m), int(len(t)/m)
     x, t = x[:x_len], t[:t_len]
 
@@ -64,12 +64,13 @@ def main():
                           verbose=False)
 
         trainer.train()
+        
 
         # パラメーターの保存
         #network.save_params("params.pkl")
         #network.load_params("params.pkl")
 
-        Test_data_acc = network.accuracy(x_test, t_test)
+        Test_data_acc = network.accuracy(x_test, t_test, regression=True)
 
         return trainer.test_acc_list, trainer.train_acc_list, Test_data_acc, network
 
@@ -126,11 +127,11 @@ def main():
         if i==10: break
 
     # best parameter の save
-    best_params_network["network"].save_params("best_Params.pkl")
+    #best_params_network["network"].save_params("best_Params.pkl")
 
     # hyper parameter の save
-    with open("MultiLayerNet/params/best_HyperParams.pkl", "wb") as f:
-        pickle.dump(best_params_network, f)
+    #with open("MultiLayerNet/params/best_HyperParams.pkl", "wb") as f:
+        #pickle.dump(best_params_network, f)
 
     return
 
