@@ -5,7 +5,7 @@
   
 #Optimizer  
 SGD acc:46.66%  
-Adam acc: %  
+Adam acc: 47.39%  
   
 #requierments 
 numpy  
