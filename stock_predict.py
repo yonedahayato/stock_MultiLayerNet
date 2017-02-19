@@ -6,7 +6,7 @@ import datetime
 import pickle
 import sys
 
-from get_make_data.get_stock_data import get_quote_yahoojp
+from get_make_data.get_stock_data import get_quote_yahoojp, get_Kdb
 from get_make_data.Granville_low import *
 from MultiLayerNet.functions import *
 
@@ -15,7 +15,7 @@ from MultiLayerNet.functions import *
 #from MultiLayerNet.multi_layer_net_extend import MultiLayerNetExtend
 #from MultiLayerNet.trainer import Trainer
 
-def get_stock_data(code):
+def get_stock_data_ByYahoojp(code):
     print(code)
     today = datetime.date.today() - datetime.timedelta(days=1)
 
@@ -40,15 +40,26 @@ def get_stock_data(code):
     date = pd.DataFrame(all_result.index)
     all_result.index = range(len(all_result))
     all_result = pd.concat([date, all_result], axis=1)
+    print(all_result)
 
-    all_result.to_csv("get_predict/stock_data.csv")
+    #all_result.to_csv("get_predict/stock_data.csv")
 
+def get_stock_data_ByKdb(code):
+    base = "http://k-db.com/stocks/{}-T?download=csv".format(int(code))
+    all_result = get_Kdb(code,"-",base)
+
+    all_result = all_result.ix[len(all_result)-30:,:]
+    all_result.index = range(len(all_result))
+    print(all_result)
+
+    #all_result.to_csv("get_predict/stock_data.csv")
 
 def main():
     x = pd.read_csv("get_make_data/x_t_data/x.csv")
     t = pd.read_csv("get_make_data/x_t_data/t.csv")
 
     # hyper parameter の load
+    print("hyper parameter loading...")
     with open("MultiLayerNet/params/best_HyperParams.pkl", "rb") as f:
         best_params_network = pickle.load(f)
 
@@ -57,17 +68,39 @@ def main():
     network = best_params_network["network"]
 
     # parameter の load
+    print("parameter loading...")
     network.load_params("best_Params.pkl")
+
+    # スコアの確認
+    n = 20
+    score = network.predict(np.array(x))[:n,:]
+    teach = np.array(t)[:n,:]
+    
+    print(["score","teach"])
+    print(np.c_[score,teach])
+    score[score>0], score[score==0], score[score<0] = 1, 0, -1
+    teach[teach>0], teach[teach==0], teach[teach<0] = 1, 0, -1
+    print(np.c_[score,teach])
+    accuracy = np.sum(score == teach) / float(score.shape[0])
+    print(accuracy)
+    #return ###---###
+
+    # best parameter の正解率を確認
+    best_accuracy = network.accuracy(np.array(x), np.array(t), regression=True)
+    print("best_accuracy: {}".format(best_accuracy))
+    return
 
     # code の情報を取得
     code = int(sys.argv[1]) # 6501
-    get_stock_data(code) # 最近の情報を取得
+    #get_stock_data_ByYahoojp(code) # 最近の情報を取得
+    get_stock_data_ByKdb(code)
+    return ###---###
 
     all_stock_data = pd.read_csv("get_predict\stock_data.csv", encoding="shift-jis", index_col=0)
 
     new_data = all_stock_data.ix[len(all_stock_data)-1:,:] # 最新のデータ
     new_data.index = range(len(new_data))
-    print(new_data)
+    #print(new_data)
 
     # データの整形
     all_stock_data = all_stock_data.ix[:, ["Date", "code", "Close"]]
@@ -91,7 +124,7 @@ def main():
     x = pd.concat([month_code_dummy, x_diff], axis=1)
     x = np.array(x)
 
-    # 次の日の株価（終値）が上がるか下がるかを予測
+    # 次の日の株価（終値）がどの程度上がるか下がるかを予測
     predict_x = network.predict(x)
     # y = softmax(predict_x) # 分類（判別）の場合は使用する
 

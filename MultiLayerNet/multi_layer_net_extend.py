@@ -114,7 +114,6 @@ class MultiLayerNetExtend:
     def accuracy(self, X, T, regression=False):
         Y = self.predict(X, train_flg=False)
         if regression:
-            print("regression")
             Y[Y>0], Y[Y==0], Y[Y<0]= 1, 0, -1
 
             T[T>0], T[T==0], T[T<0] = 1, 0, -1

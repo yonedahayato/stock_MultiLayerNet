@@ -2,7 +2,7 @@
 
 import numpy as np
 import pandas as pd
-#import pandas.io.data as web
+import pandas.io.data as web
 import sys
 import urllib
 from io import StringIO
@@ -53,9 +53,11 @@ def get_quote_yahoojp(code, start=None, end=None, interval='d'):
     result = pd.concat([date, result],axis=1)
     return result
 
-def get_Kdb(code, year):
-    base = "http://k-db.com/stocks/{}-T/1d/{}?download=csv".format(int(code), int(year))
-    #print(base)
+def get_Kdb(code, year, base=None):
+    if base is None:
+        base = "http://k-db.com/stocks/{}-T/1d/{}?download=csv".format(int(code), int(year))
+
+    print(base)
 
     res = urllib.request.urlopen(base)
     res=res.read().decode('shift-jis')
