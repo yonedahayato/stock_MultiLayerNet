@@ -57,7 +57,7 @@ def get_Kdb(code, year, base=None):
     if base is None:
         base = "http://k-db.com/stocks/{}-T/1d/{}?download=csv".format(int(code), int(year))
 
-    print(base)
+    #print(base)
 
     res = urllib.request.urlopen(base)
     res=res.read().decode('shift-jis')
