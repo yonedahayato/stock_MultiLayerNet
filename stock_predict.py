@@ -5,15 +5,17 @@ import numpy as np
 import datetime
 import pickle
 import sys
+from datetime import datetime as dt
+import datetime
 
-from get_make_data.get_stock_data import get_quote_yahoojp, get_Kdb
+try:
+    from get_make_data.get_stock_data import get_quote_yahoojp, get_Kdb
+except:
+    pass
 from get_make_data.Granville_low import *
 from MultiLayerNet.functions import *
 
-#from MultiLayerNet.util import shuffle_dataset
-#from MultiLayerNet.multi_layer_net import MultiLayerNet
-#from MultiLayerNet.multi_layer_net_extend import MultiLayerNetExtend
-#from MultiLayerNet.trainer import Trainer
+import get_predict.holiday.holiday as holiday
 
 def get_stock_data_ByYahoojp(code):
     print(code)
@@ -50,9 +52,47 @@ def get_stock_data_ByKdb(code):
 
     all_result = all_result.ix[len(all_result)-30:,:]
     all_result.index = range(len(all_result))
-    print(all_result)
+    #print(all_result)
 
-    #all_result.to_csv("get_predict/stock_data.csv")
+    all_result.to_csv("get_predict/stock_data.csv")
+
+def confirmation_score(network, x, t, n=20):
+    # スコアの確認
+    score = network.predict(np.array(x))[:n,:]
+    teach = np.array(t)[:n,:]
+
+    print(["score","teach"])
+    print(np.c_[score,teach])
+
+    score[score>0], score[score==0], score[score<0] = 1, 0, -1
+    teach[teach>0], teach[teach==0], teach[teach<0] = 1, 0, -1
+    print(np.c_[score,teach])
+
+    accuracy = np.sum(score == teach) / float(score.shape[0])
+    print(accuracy)
+
+    # best parameter の正解率を確認
+    best_accuracy = network.accuracy(np.array(x), np.array(t), regression=True)
+    print("best_accuracy: {}".format(best_accuracy))
+
+def weekday_hoiday(new_data):
+    # 予測する日が休日祝日でないかを判定する
+    # 休日祝日であった場合一番近い平日の値を返す
+    date = dt.strptime(new_data.ix[0,"Date"], '%Y-%m-%d')
+    date = datetime.date(date.year, date.month, date.day)
+    
+    date = date + datetime.timedelta(days=1) # 予測をする日は入力のdateの次の日
+    while True:
+        if date.weekday() in [5,6]: # 土日
+            date = date + datetime.timedelta(days=1)
+            continue
+
+        holiday_list = holiday.main(from_year=date.year, to_year=date.year, list_form=True)
+        if date in holiday_list: # 祝日
+            date = date + datetime.timedelta(days=1)
+            continue
+
+        return date
 
 def main():
     x = pd.read_csv("get_make_data/x_t_data/x.csv")
@@ -71,36 +111,21 @@ def main():
     print("parameter loading...")
     network.load_params("best_Params.pkl")
 
-    # スコアの確認
-    n = 20
-    score = network.predict(np.array(x))[:n,:]
-    teach = np.array(t)[:n,:]
-    
-    print(["score","teach"])
-    print(np.c_[score,teach])
-    score[score>0], score[score==0], score[score<0] = 1, 0, -1
-    teach[teach>0], teach[teach==0], teach[teach<0] = 1, 0, -1
-    print(np.c_[score,teach])
-    accuracy = np.sum(score == teach) / float(score.shape[0])
-    print(accuracy)
-    #return ###---###
+    #confirmation_score_acc(network, x, t, n=30) # スコアの確認
 
-    # best parameter の正解率を確認
-    best_accuracy = network.accuracy(np.array(x), np.array(t), regression=True)
-    print("best_accuracy: {}".format(best_accuracy))
-    return
-
-    # code の情報を取得
+    # code の最近の情報を取得
     code = int(sys.argv[1]) # 6501
-    #get_stock_data_ByYahoojp(code) # 最近の情報を取得
-    get_stock_data_ByKdb(code)
-    return ###---###
+    #get_stock_data_ByYahoojp(code)
+    get_stock_data_ByKdb(code) # こちらを使用
 
     all_stock_data = pd.read_csv("get_predict\stock_data.csv", encoding="shift-jis", index_col=0)
 
     new_data = all_stock_data.ix[len(all_stock_data)-1:,:] # 最新のデータ
     new_data.index = range(len(new_data))
-    #print(new_data)
+    print(new_data)
+
+    predict_date = weekday_hoiday(new_data) # 予測する日が休日か祝日でないかを判定する
+    #print(predict_date)
 
     # データの整形
     all_stock_data = all_stock_data.ix[:, ["Date", "code", "Close"]]
@@ -133,13 +158,13 @@ def main():
 
     # if y[0,0]==0 and y[0,1]==1:
     if predict_x[0,0]>0:
-        print("上昇 {}:{}".format(Type, predict_value))
+        print("{} 上昇 {}:{}".format(predict_date, Type, predict_value))
     # elif y[0,0]==1 and y[0,1]==0:
     elif predict_x[0,0]<0:
-        print("下降 {}:{}".format(Type, predict_value))
+        print("{} 下降 {}:{}".format(predict_date, Type, predict_value))
     else:
         #print("error")
-        print("変化なし")
+        print("{} 変化なし{}:{}".format(predict_date, Type, predict_value))
     return
 
 if __name__ == '__main__':
