@@ -96,7 +96,7 @@ def main():
 
         params_dict = {}
 
-        val_acc_list, train_acc_list, test_acc, network = __train(lr, weight_decay, Optimizer) #学習
+        val_acc_list, train_acc_list, test_acc, network = __train(lr, weight_decay, Optimizer=Optimizer) #学習
 
         print("val acc:"+str(val_acc_list[-1])+", test acc:"+str(test_acc)+" | lr:"+str(lr)+", weight decay:"+str(weight_decay))
 
@@ -129,10 +129,10 @@ def main():
         if i==10: break
 
     # best parameter の save
-    best_params_network["network"].save_params("best_Params.pkl")
+    best_params_network["network"].save_params("best_Params_{}.pkl".fromat(Optimizer))
 
     # hyper parameter の save
-    with open("MultiLayerNet/params/best_HyperParams.pkl", "wb") as f:
+    with open("MultiLayerNet/params/best_HyperParams_{}.pkl".fromat(Optimizer), "wb") as f:
         pickle.dump(best_params_network, f)
 
     return
