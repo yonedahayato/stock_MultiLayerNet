@@ -94,6 +94,45 @@ def weekday_hoiday(new_data):
 
         return date
 
+def data_making(all_stock_data):
+    # データの整形
+    all_stock_data = all_stock_data.ix[:, ["Date", "code", "Close"]]
+    all_stock_data = Make_NextDayData_TeachData(all_stock_data, "Close", NoTeach=True)
+    all_stock_data = get_SMA(all_stock_data, "Close")
+    x_diff = get_train_diff(all_stock_data, "Close")
+    x_diff = x_diff.ix[len(x_diff)-1:,:]
+    x_diff.index = [0]
+
+    return x_diff
+
+def manth_code_making(code):
+    # get_MonthCodeの引数を作成する
+    month_df = pd.DataFrame([str(datetime.date.today() - datetime.timedelta(days=1))], columns=["Date"])
+    code_df = pd.DataFrame([code], columns=["code"])
+    month_code = pd.concat([month_df, code_df], axis=1)
+
+    # month と code の引数の作成
+    month_code_dummy = get_MonthCode_DummyData(month_code)
+    header = ["month_"+str(i+1) for i in range(12)]+["class_"+str(i+1) for i in range(9)]
+    month_code_dummy = pd.concat([pd.DataFrame([], columns=header), month_code_dummy], axis=0)
+    month_code_dummy = month_code_dummy.fillna(0) # Nan を 0に置換
+    month_code_dummy = month_code_dummy.ix[:, header] # headerの順番に並べ替え
+
+    return month_code_dummy
+
+def status_cheak(predict_x, predict_date, Type, predict_value):
+    # if y[0,0]==0 and y[0,1]==1:
+    if predict_x>0:
+        print("{} 上昇 {}:{}".format(predict_date, Type, predict_value))
+
+    # elif y[0,0]==1 and y[0,1]==0:
+    elif predict_x<0:
+        print("{} 下降 {}:{}".format(predict_date, Type, predict_value))
+
+    else:
+        print("{} 変化なし{}:{}".format(predict_date, Type, predict_value))
+
+
 def main():
     x = pd.read_csv("get_make_data/x_t_data/x.csv")
     t = pd.read_csv("get_make_data/x_t_data/t.csv")
@@ -122,49 +161,38 @@ def main():
 
     new_data = all_stock_data.ix[len(all_stock_data)-1:,:] # 最新のデータ
     new_data.index = range(len(new_data))
-    print(new_data)
 
-    predict_date = weekday_hoiday(new_data) # 予測する日が休日か祝日でないかを判定する
-    #print(predict_date)
+    for i in range(5):
+        # 予測する日が休日か祝日でないかを判定する
+        predict_date = weekday_hoiday(new_data)
 
-    # データの整形
-    all_stock_data = all_stock_data.ix[:, ["Date", "code", "Close"]]
-    all_stock_data = Make_NextDayData_TeachData(all_stock_data, "Close", NoTeach=True)
-    all_stock_data = get_SMA(all_stock_data, "Close")
-    x_diff = get_train_diff(all_stock_data, "Close")
-    x_diff = x_diff.ix[len(x_diff)-1:,:]
-    x_diff.index = [0]
+        # データの整形
+        x_diff = data_making(all_stock_data)
 
-    # get_MonthCodeの引数を作成する
-    month_df = pd.DataFrame([str(datetime.date.today() - datetime.timedelta(days=1))], columns=["Date"])
-    code_df = pd.DataFrame([code], columns=["code"])
-    month_code = pd.concat([month_df, code_df], axis=1)
+        # month と code の引数の作成
+        month_code_dummy = manth_code_making(code)
 
-    month_code_dummy = get_MonthCode_DummyData(month_code)
-    header = ["month_"+str(i+1) for i in range(12)]+["class_"+str(i+1) for i in range(9)]
-    month_code_dummy = pd.concat([pd.DataFrame([], columns=header), month_code_dummy], axis=0)
-    month_code_dummy = month_code_dummy.fillna(0) # Nan を 0に置換
-    month_code_dummy = month_code_dummy.ix[:, header] # headerの順番に並べ替え
+        x = pd.concat([month_code_dummy, x_diff], axis=1)
+        x = np.array(x)
 
-    x = pd.concat([month_code_dummy, x_diff], axis=1)
-    x = np.array(x)
+        # 次の日の株価（終値）がどの程度上がるか下がるかを予測
+        predict_x = network.predict(x)
+        # y = softmax(predict_x) # 分類（判別）の場合は使用する
 
-    # 次の日の株価（終値）がどの程度上がるか下がるかを予測
-    predict_x = network.predict(x)
-    # y = softmax(predict_x) # 分類（判別）の場合は使用する
+        predict_value = int(new_data.ix[0,"Close"]*(1+predict_x[0,0]))
+        Type="Close"
 
-    predict_value = int(new_data.ix[0,"Close"]*(1+predict_x[0,0]))
-    Type="Close"
+        status = status_cheak(predict_x[0,0], predict_date, Type, predict_value)
 
-    # if y[0,0]==0 and y[0,1]==1:
-    if predict_x[0,0]>0:
-        print("{} 上昇 {}:{}".format(predict_date, Type, predict_value))
-    # elif y[0,0]==1 and y[0,1]==0:
-    elif predict_x[0,0]<0:
-        print("{} 下降 {}:{}".format(predict_date, Type, predict_value))
-    else:
-        #print("error")
-        print("{} 変化なし{}:{}".format(predict_date, Type, predict_value))
+        Date_tmp = str(datetime.date(predict_date.year, predict_date.month, predict_date.day))
+
+        new_data = pd.concat([new_data, pd.DataFrame( [[Date_tmp, predict_value]], columns=["Date", Type], index=range(1,len(new_data)+1) )], axis=0)
+        new_data = new_data.ix[len(new_data)-1:,:]
+        new_data.index = range(len(new_data))
+
+        all_stock_data = pd.concat([all_stock_data.ix[1:,:], pd.DataFrame([[Date_tmp, predict_value]], columns=["Date", Type])], axis=0)
+        all_stock_data.index = range(len(all_stock_data))
+
     return
 
 if __name__ == '__main__':
