@@ -4,11 +4,15 @@ import pandas as pd
 import numpy as np
 import datetime
 import pickle
+import sys
+import random
 
 from MultiLayerNet.util import shuffle_dataset
 from MultiLayerNet.multi_layer_net import MultiLayerNet
 from MultiLayerNet.multi_layer_net_extend import MultiLayerNetExtend
 from MultiLayerNet.trainer import Trainer
+
+from train_method import *
 
 def __train(lr, weight_decay,
             x, x_val, x_train, x_test,
@@ -50,121 +54,18 @@ def __train(lr, weight_decay,
     #network.save_params("params.pkl")
     #network.load_params("params.pkl")
 
-    Test_data_acc = network.accuracy(x_test, t_test, regression=True)
+    Test_data_acc = network.accuracy(x_test, t_test, regression=True) # 正解率
+    # Test_data_loss = network.loss(x_test, t_test, real_mean=True) # 変化率の分散
+
+    # ...return...
+    # ...trainer.test_acc_list...val_acc_list
+    # ...trainer.train_acc_list...train_acc_list
+    # ...Test_data_acc...test_acc
+    # ...network...network
 
     return trainer.test_acc_list, trainer.train_acc_list, Test_data_acc, network
 
-def hyper_parameter_verification(optimization_trial, Optimizer,
-                                 x, x_val, x_train, x_test,
-                                 t, t_val, t_train, t_test):
-    results_val = {}
-    results_train = {}
-    results_test = {}
-
-    # hyper_parameter
-    params_dict_lr = {} # leaning_rate
-    params_dict_WeightDecay = {} # weight_decay
-
-    network_dict = {}
-
-
-    for _ in range(optimization_trial):
-        start = datetime.datetime.now()
-        print(start)
-
-        weight_decay = 10**np.random.uniform(-8, -4) # (-8, -4)
-        lr = 10**np.random.uniform(-6, -2) # (-6, -2)
-
-        params_dict = {}
-
-        val_acc_list, train_acc_list, test_acc, network = __train(lr, weight_decay,
-                                                                  x, x_val, x_train, x_test,
-                                                                  t, t_val, t_train, t_test,
-                                                                  Optimizer=Optimizer) #学習
-
-        print("val acc:"+str(val_acc_list[-1])+", test acc:"+str(test_acc)+" | lr:"+str(lr)+", weight decay:"+str(weight_decay))
-
-        key = "lr:"+str(lr)+", weight decay:"+str(weight_decay)
-
-        results_val[key] = val_acc_list
-        results_train[key] = train_acc_list
-        results_test[key] = test_acc
-
-        params_dict_lr[key] = lr
-        params_dict_WeightDecay[key] = weight_decay
-
-        network_dict[key] = network
-
-        print("elapsed time:{0}".format(datetime.datetime.now() - start))
-
-    print("=== Hyper-Parameter Optimization Result ===")
-    i = 0
-    best_params_network = {}
-    for key, val_acc_list in sorted(results_val.items(), key=lambda x:x[1][-1], reverse=True):
-        print("Best-"+str(i+1)+"(val acc:"+str(val_acc_list[-1])+", test acc:"+str(results_test[key])+") | "+key)
-        print(params_dict_lr[key])
-        print(params_dict_WeightDecay[key])
-        if i==0:
-            best_params_network["lr"] = params_dict_lr[key]
-            best_params_network["weight_decay"] = params_dict_WeightDecay[key]
-            best_params_network["network"] = network_dict[key]
-
-        i+=1
-        if i==10: break
-
-    return best_params_network
-
-def optimizer_verification(Optimizer_dict, optimization_trial,
-                           x, x_val, x_train, x_test,
-                           t, t_val, t_train, t_test):
-    results_val = {}
-    results_train = {}
-    results_test = {}
-
-    network_dict = {}
-    Optimizer_point = {"sgd":0, "adam":0}
-
-    for _ in range(optimization_trial):
-        for key_opt, value in Optimizer_dict.items():
-            start = datetime.datetime.now()
-            print(start)
-            weight_decay = 10**np.random.uniform(-8, -4)
-            lr = 10**np.random.uniform(-6, -2)
-
-            Optimizer_dict_result = {}
-
-            val_acc_list, train_acc_list, test_acc, network = __train(lr, weight_decay,
-                                                                      x, x_val, x_train, x_test,
-                                                                      t, t_val, t_train, t_test,
-                                                                      Optimizer=key_opt) #学習
-
-            print("val acc:"+str(val_acc_list[-1])+", test acc:"+str(test_acc)+" | Optimizer:"+str(key_opt))
-
-            key = str(key_opt)
-
-            results_val[key] = val_acc_list
-            results_train[key] = train_acc_list
-            results_test[key] = test_acc
-
-            Optimizer_dict[key] = str(key_opt)
-
-            network_dict[key] = network
-
-            print("elapsed time:{0}".format(datetime.datetime.now() - start))
-
-        if results_test["sgd"] < results_test["adam"]:
-            Optimizer_point["adam"] += 1
-        elif results_test["sgd"] > results_test["adam"]:
-            Optimizer_point["sgd"] += 1
-        else:
-            pass
-    print("====Optimizer_point====")
-    print("sgd: {}, adam: {}".format(Optimizer_point["sgd"], Optimizer_point["adam"]))
-
-
-
 def main():
-
     x = pd.read_csv("get_make_data/x_t_data/x.csv")
     t = pd.read_csv("get_make_data/x_t_data/t.csv")
 
@@ -188,31 +89,36 @@ def main():
     x_train, t_train = x[validation_num:validation_num + train_num], t[validation_num:validation_num + train_num]
     x_test, t_test = x[validation_num + train_num:], t[validation_num + train_num:]
 
-
-
-
-    optimization_trial = 5 # 100
+    #---#
+    # ハイパーパラメータを検証する回数
+    optimization_trial = 10 # 100 
+    """
     Optimizer = "Adam" # 最適化法 {'sgd':SGD, 'momentum':Momentum, 'nesterov':Nesterov,
                        #           'adagrad':AdaGrad, 'rmsprpo':RMSprop, 'adam':Adam}
 
-    # hyper_parameter
-    params_dict_lr = {} # leaning_rate
-    params_dict_WeightDecay = {} # weight_decay
-
-    network_dict = {}
-    """
     best_params_network = hyper_parameter_verification(optimization_trial, Optimizer,
                                                        x, x_val, x_train, x_test,
                                                        t, t_val, t_train, t_test) # hyper parameterの検証
+    # ノードの数と最適化法を固定してハイパーパラメータ(leaning rate, weight decay)の検証を行う
     """
-    
+    """
     Optimizer_dict = {"sgd":"SGD", "adam":"Adam"}
     optimizer_verification(Optimizer_dict, optimization_trial,
                            x, x_val, x_train, x_test,
                            t, t_val, t_train, t_test)
-    return
-
-
+    # ハイパーパラメーター(learning rate, weight decay)とノードの数 を固定して optimizer(最適化法)毎に評価する
+    """
+    """
+    unit_verification(x, x_val, x_train, x_test,
+                      t, t_val, t_train, t_test)
+    """
+    """
+    grid_search(x, x_val, x_train, x_test,
+                t, t_val, t_train, t_test)
+    """
+    print("bayesian_optimizer \n")
+    bayesian_optimizer()
+    sys.exit()
 
     # best parameter の save
     best_params_network["network"].save_params("best_Params_{}.pkl".fromat(Optimizer))
@@ -226,4 +132,5 @@ def main():
 
 if __name__ == '__main__':
     print("main_train_main")
+    print("\n")
     main()
